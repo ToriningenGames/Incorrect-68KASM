@@ -1,0 +1,19 @@
+Incorrect 68k object file
+EXTLABEL
+UNKLABEL
+SOMEDEFINE
+LABELNAME 128
+LABEL2 254
+LABELNEXT 199986
+DEFNAME 194675-EXTLABEL*2
+
+Q0000000E1EF2A5B42879CD14504AD894FE1BC568AD4FE65C489454B98C8A7D9F4E5498C45B8D549AF8E5C545B4D6A54F8E94C564LDEFNAME-4+UNKLABEL 489AD4156C7894B85E1657F984C56AD894B5C45F4DA6E84F5C4B64983210C8EF
+
+~~~ Basically...
+First line constant, followed by
+A list of labels, undefineds first. Defined and evaluated labels are followed by their value in decimal. Unevaluatable labels are followed by their expression.
+A blank line, followed by the assembled object data: a list of
+Q: A 32 bit address, Motorola style
+L: A space-terminated expression containing unknown labels. Result 32 bits
+S: A space-terminated expression containing unknown labels. Result 16 bits
+I: A space-terminated expression containing unknown labels. Result 8 bits
