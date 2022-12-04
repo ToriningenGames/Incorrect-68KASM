@@ -1,14 +1,19 @@
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdio.h>
 #include "oplist.h"
+#include "eval.h"
 
 
 extern char *scanline();
 
 char *dirparse(char *dir);
-uint64_t expparse(char **exp);
+int64_t expparse(char **exp);
 bool expcheck(char *exp);
-char *opparse(char *op);
+char *opparse(char *op, char *args);
 bool opcheck(char *op);
 uint64_t valparse(char *exp);
 
@@ -32,7 +37,7 @@ char *assemble()
                 //Implicit label
         } else if (inrow[0] == '.') {
                 //Directive
-                out = dirparse(intoken);
+                out = dirparse(inrow);
         } else if (!inrow[0]) {
                 //Nothing
         } else {
@@ -42,7 +47,7 @@ char *assemble()
                 memcpy(intoken, inrow, strcspn(inrow, " "));
                 intoken[strcspn(inrow, " ")] = '\0';
                 if (opcheck(intoken)) {
-                        out = opparse(intoken);
+                        out = opparse(intoken, inrow + strlen(intoken));
                 } else {
                         //Remove optional terminating colon
                         if (intoken[strlen(intoken)-1] == ':') {
@@ -59,7 +64,7 @@ char *assemble()
                         //Basically an assignment from the current address
                         addvar(intoken, "$");
                 }
-                free(intoken)
+                free(intoken);
         }
         free(inrow);
         return out;
@@ -77,7 +82,7 @@ bool opcheck(char *op)
         return false;
 }
 
-char *opparse(char *op)
+char *opparse(char *op, char *args)
 {
         //Find a possible opcode
         for (int i = 0; ops[i].op; i++) {
@@ -86,7 +91,7 @@ char *opparse(char *op)
                 }
                 //Op matches, what about arguments?
                 char *args = NULL;
-                if (scantoken()[0] == ' ') {
+                if (args[0]) {
                         //argument(s) follow
                 } else {
                         //No arguments period

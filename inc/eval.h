@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <bool.h>
+#include <stdbool.h>
 
 
 struct var {

@@ -5,7 +5,7 @@
 void implicit(struct oplist *inst, char *args);
 void  failure(struct oplist *inst, char *args);
 
-struct oplist ops[] = {
+struct oplist *ops = {
         { "NOP",     "", "", "", 0x4E71, implicit },
         { "RESET",   "", "", "", 0x4E70, implicit },
         { "RTE",     "", "", "", 0x4E73, implicit },

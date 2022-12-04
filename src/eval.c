@@ -1,13 +1,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdio.h>
+
 
 #define NESTLEVEL 8     //How many parenthesis do you want to nest?
 
 extern char *scantoken();
 extern uint64_t address;
 
-enum operations { op_end, op_closeparen, op_assign, op_and, op_or, op_xor, op_lognot, op_add, op_sub, op_mul, op_div, op_pow, op_neg, op_not, op_lobyte, op_hibyte, op_loword, op_hiword, op_paren, op_now };
+enum operations { op_end, op_closeparen, op_assign, op_and, op_or, op_xor, op_lognot, op_add, op_sub, op_mul, op_div, op_pow, op_neg, op_not, op_lobyte, op_hibyte, op_loword, op_hiword, op_openparen, op_now };
 
 //higher is better
 int opvaluelist[] = {
@@ -59,7 +63,7 @@ int64_t expparse(char **exp);
 char *expreduce(char **exp);
 bool expcheck(char *exp);
 char *readexpr(struct evalstate *state);
-void eval(struct evalstate *state);
+bool eval(struct evalstate *state);
 
 
 void recursioncheck()
@@ -112,7 +116,7 @@ void remvar(char *name)
 {
         struct var *target = findvar(name);
         //No var?
-        if (!varptr) {
+        if (!target) {
                 return;
         }
         free(target->name);
@@ -135,7 +139,7 @@ struct var *findvar(char *name)
 int64_t expparse(char **exp)
 {
         char *result = expreduce(exp);
-        char *end
+        char *end;
         long val = strtol(result, &end, 0);
         if (*end != '\0') {
                 puts("Internal error: attemped to treat non-integer as integer");
@@ -169,7 +173,7 @@ char *readexpr(struct evalstate *state)
                         out = realloc(out, len+1);
                         out[len-1] = ')';
                         break;
-                case op_paren :
+                case op_openparen :
                         len++;
                         out = realloc(out, len+1);
                         out[len-1] = '(';
@@ -380,7 +384,7 @@ bool pushunaryop(char **exp, struct evalstate *state)
                 break;
         case '(' :
                 (*exp)++;
-                state->opstack[state->optop++] = op_paren;
+                state->opstack[state->optop++] = op_openparen;
                 break;
         default :
                 return false;
@@ -483,7 +487,7 @@ bool pushval(char **exp, struct evalstate *state)
                         return false;
                 }
                 char *id = malloc(len+1);
-                strncpy(id, *exp, len)
+                strncpy(id, *exp, len);
                 id[len] = '\0';
                 //Push it
                 state->datastack[state->datatop].value = 0;
@@ -501,6 +505,7 @@ bool eval(struct evalstate *state)
         enum operations opdo = state->opstack[state->optop - 1];
         //Get one operand
         struct operand op2 = state->datastack[state->datatop - 1];
+        struct operand op1;
         //Can we even evaluate this?
         if (op2.name && findvar(op2.name)->exp) {
                 //No good...
@@ -510,7 +515,6 @@ bool eval(struct evalstate *state)
         state->optop--;
         state->datatop--;
         op2.value = findvar(op2.name)->value;
-        free(op2.name);
         //Technically a nested switch case, to do the unaries before the binaries
         switch (opdo) {
         case op_end :
@@ -520,29 +524,29 @@ bool eval(struct evalstate *state)
                 //Expression has reached end; nothing for us to do
                 break;
         case op_lognot :
-                op2 = !op2;
+                op2.value = !op2.value;
                 break;
         case op_neg :
-                op2 = -op2;
+                op2.value = -op2.value;
                 break;
         case op_not :
-                op2 = ~op2;
+                op2.value = ~op2.value;
                 break;
         case op_lobyte :
-                op2 &= 0xFF;
+                op2.value &= 0xFF;
                 break;
         case op_hibyte :
-                op2 = (op2 >> 8) & 0xFF;
+                op2.value = (op2.value >> 8) & 0xFF;
                 break;
         case op_loword :
-                op2 &= 0xFFFF;
+                op2.value &= 0xFFFF;
                 break;
         case op_hiword :
-                op2 = (op2 >> 16) & 0xFFFF;
+                op2.value = (op2.value >> 16) & 0xFFFF;
                 break;
         case op_assign :
                 //Assign is technically binary, but we aren't expected to evaluate op1
-                struct operand op1 = state->datastack[state->datatop - 1];
+                op1 = state->datastack[state->datatop - 1];
                 //In fact, assigning to a value is an error
                 if (!op1.name) {
                         printf("Attempting to assign to constant '%PRIu64'\n", op1.value);
@@ -554,7 +558,7 @@ bool eval(struct evalstate *state)
                 op2 = op1;
                 break;
         default :       //Binary expression
-                struct operand op1 = state->datastack[state->datatop - 1];
+                op1 = state->datastack[state->datatop - 1];
                 if (op1.name && findvar(op1.name)->exp) {
                         //Put args back
                         state->opstack[state->optop++] = opdo;
@@ -645,7 +649,7 @@ char *expreduce(char **exp)
         }
         //This destroys trailing closing parenthesis, so add them in.
         for (int i = 0; i < state.optop; i++) {
-                if (state.opstack == op_paren) {
+                if (state.opstack == op_openparen) {
                         state.opstack[state.optop++] = op_closeparen;
                 }
         }
