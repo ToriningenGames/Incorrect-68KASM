@@ -4,5 +4,6 @@
 #define GLOBALS_H
 
 extern uint64_t address;
+extern char inttohex(int val);
 
 #endif

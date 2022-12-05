@@ -21,14 +21,17 @@ struct oplist ops[] = {
 void implicit(FILE *source, FILE *output, struct oplist *inst, char *args)
 {
         //Opcode arguments: none
-        if (args[0] != '\0') {
+        if (args && args[0] != '\0') {
                 printf("Error: invalid argument '%s' to '%s'\n", args, inst->op);
                 exit(1);
         }
         //Output type: Take the hex from the oplist and output it, Motorola style
-        fputc((inst->hex & 0xFF00) >> 8, output);
+        //(Assuming ASCII-style contiguous code-points)
+        fputc(inttohex((inst->hex & 0xF000) >> 12), output);
+        fputc(inttohex((inst->hex & 0xF00) >> 8), output);
         address++;
-        fputc(inst->hex & 0xFF, output);
+        fputc(inttohex((inst->hex & 0xF0) >> 4), output);
+        fputc(inttohex((inst->hex & 0xF)), output);
         address++;
 }
 

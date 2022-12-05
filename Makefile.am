@@ -6,4 +6,5 @@ M68KASM_SOURCES = \
     src/lex.c \
     src/main.c \
     src/oplist.c \
-    src/dir.c
+    src/dir.c \
+    src/global.c

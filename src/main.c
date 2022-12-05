@@ -53,7 +53,7 @@ int main(int argc, char **argv)
         if (!infile) {
                 puts("No input file specified!");
                 //Show help
-                main(2, (char**){argv[0], "-h"});
+                main(2, (char*[2]){argv[0], "-h"});
                 exit(1);
         }
         //Default output file is the input file, but with an ".o" extension
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
                 strcat(outfile, ".o");
         }
         //Set up environment
-        indata = fopen(infile, "r");
+        indata = fopen(infile, "rb");
         free(infile);
         FILE *outtxt = tmpfile();
         fputs("Q00000000", outtxt);
@@ -76,6 +76,7 @@ int main(int argc, char **argv)
         //Output
         FILE *outdata = fopen(outfile, "w");
         free(outfile);
+        fputc('\n', outtxt);
         rewind(outtxt);
         //Header
         fputs("Incorrect 68k object file\n", outdata);
@@ -90,13 +91,10 @@ int main(int argc, char **argv)
         }
         fputs("\n", outdata);
         //Copy hex data
-        void *buf = malloc(4096);
-        while (!feof(outdata)) {
-                fwrite(buf, 1, fread(buf, 1, 4096, outtxt), outdata);
+        while (!feof(outtxt)) {
+                fputc(fgetc(outtxt), outdata);
         }
-        fputs("\n", outdata);
         //Cleanup
-        free(buf);
         fclose(outdata);
         fclose(outtxt);
         return 0;
