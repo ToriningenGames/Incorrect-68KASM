@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 
 FILE *indata;
@@ -46,7 +47,7 @@ int scanunspaced()
                 c = scanescaped();
                 //Collapse comments
                 if (c == ';') {
-                        while (c != "\n") {
+                        while (c != '\n') {
                                 c = scanescaped();
                         }
                 }

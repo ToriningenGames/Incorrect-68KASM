@@ -649,7 +649,7 @@ char *expreduce(char **exp)
         }
         //This destroys trailing closing parenthesis, so add them in.
         for (int i = 0; i < state.optop; i++) {
-                if (state.opstack == op_openparen) {
+                if (state.opstack[state.optop-1] == op_openparen) {
                         state.opstack[state.optop++] = op_closeparen;
                 }
         }

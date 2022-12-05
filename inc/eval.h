@@ -2,11 +2,12 @@
 #include <stdbool.h>
 
 
-struct var {
+extern struct var {
         char *name;
         int64_t value;
         char *exp;
-};
+} *varlist;
+extern int varlistlen;
 
 void addvar(char *name, char *value);
 void remvar(char *name);

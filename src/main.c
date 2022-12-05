@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include "eval.h"
 
 
 char *infile;
 char *outfile;
 extern FILE *indata;
+extern void assemble(FILE *source, FILE *output);
 
 int main(int argc, char **argv)
 {
@@ -27,15 +31,29 @@ int main(int argc, char **argv)
                                 break;
                         case 'D' :      //Command line define for assembly
                                 puts("Unimplemented option -D");
-                                exit(2);
+                                return 2;
+                        case 'h' :      //Help!
+                                puts("Incorrect Motorola 68000 Assembler");
+                                puts("Usage:");
+                                puts("\tM68KASM -i input -o output -D VAR=value\n");
+                                puts("Arguments:");
+                                puts("\t-i: input file");
+                                puts("\t\tSpecify which file to assemble");
+                                puts("\t-o: output file");
+                                puts("\t\tSpecify which file to send object data to");
+                                puts("\t-D: define variable value");
+                                puts("\t\t(Unimplemented) Define a variable's value here");
+                                return 0;
                         default :
                                 printf("Unknown option '%c'\n", argv[i][1]);
-                                exit(1);
+                                return 1;
                         }
                 }
         }
         if (!infile) {
-                puts("No input file specified");
+                puts("No input file specified!");
+                //Show help
+                main(2, (char**){argv[0], "-h"});
                 exit(1);
         }
         //Default output file is the input file, but with an ".o" extension
@@ -51,17 +69,34 @@ int main(int argc, char **argv)
         //Set up environment
         indata = fopen(infile, "r");
         free(infile);
-        //Assemble
         FILE *outtxt = tmpfile();
-        while (!feof(indata)) {
-                fputs(assemble(), outtxt);
-        }
-        //Output
+        fputs("Q00000000", outtxt);
+        assemble(indata, outtxt);
         fclose(indata);
+        //Output
         FILE *outdata = fopen(outfile, "w");
         free(outfile);
-        
+        rewind(outtxt);
+        //Header
+        fputs("Incorrect 68k object file\n", outdata);
+        //Labels
+        for (int i = 0; i < varlistlen; i++) {
+                fprintf(outdata, "%s ", varlist[i].name);
+                if (varlist[i].exp) {
+                        fprintf(outdata, "%s\n", varlist[i].exp);
+                } else {
+                        fprintf(outdata, "%ll\n", varlist[i].value);
+                }
+        }
+        fputs("\n", outdata);
+        //Copy hex data
+        void *buf = malloc(4096);
+        while (!feof(outdata)) {
+                fwrite(buf, 1, fread(buf, 1, 4096, outtxt), outdata);
+        }
+        fputs("\n", outdata);
         //Cleanup
+        free(buf);
         fclose(outdata);
         fclose(outtxt);
         return 0;
