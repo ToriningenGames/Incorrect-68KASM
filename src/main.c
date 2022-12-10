@@ -7,7 +7,6 @@
 
 char *infile;
 char *outfile;
-extern FILE *indata;
 extern void assemble(FILE *source, FILE *output);
 
 int main(int argc, char **argv)
@@ -67,7 +66,7 @@ int main(int argc, char **argv)
                 strcat(outfile, ".o");
         }
         //Set up environment
-        indata = fopen(infile, "rb");
+        FILE *indata = fopen(infile, "rb");
         free(infile);
         FILE *outtxt = tmpfile();
         fputs("Q00000000", outtxt);

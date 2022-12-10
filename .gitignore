@@ -1,4 +1,4 @@
-bin/*
+*bin/*
 autom4te.cache/
 Makefile.in
 compile
