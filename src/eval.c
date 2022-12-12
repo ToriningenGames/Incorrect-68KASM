@@ -585,7 +585,8 @@ bool eval(struct evalstate *state)
                 break;
         case op_pow :
                 //Inefficient but easy, especially since C doesn't have a "get highest bit"
-                uint64_t temp = 1;
+                ;
+		uint64_t temp = 1;
                 while (op1.value-- > 0) {
                         temp *= op2.value;
                 }
